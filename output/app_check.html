@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Campus Customs — App Check (HW4 Problem 11)</title>
+  <style>
+    :root { --blue: #00356b; --paper: #f7f5f0; --line: #e2ded5; --text: #17212e; --muted: #5b6676; --ok: #1b7443; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Inter, system-ui, -apple-system, "Segoe UI", Arial, sans-serif; color: var(--text); background: var(--paper); line-height: 1.55; }
+    header { background: var(--blue); color: #fff; padding: 2rem 1.5rem; }
+    header h1 { margin: 0 0 0.3rem; font-family: Georgia, "Times New Roman", serif; font-size: 2rem; }
+    header p { margin: 0; color: #d6e2f1; }
+    main { max-width: 1180px; margin: 0 auto; padding: 1.5rem; }
+    .summary { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; }
+    .summary ol { margin: 0.4rem 0 0; padding-left: 1.2rem; }
+    section.check { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 1.5rem; margin-bottom: 2rem; }
+    h2 { font-family: Georgia, "Times New Roman", serif; color: var(--blue); margin: 0 0 0.25rem; }
+    .pass { display: inline-block; background: #e8f4ec; color: var(--ok); font-weight: 700; font-size: 0.85rem; padding: 0.15rem 0.6rem; border-radius: 999px; margin-left: 0.5rem; vertical-align: middle; font-family: Inter, system-ui, sans-serif; }
+    .label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 1rem 0 0.3rem; }
+    .test { margin: 0; }
+    code, .q { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 0.05rem 0.4rem; font-size: 0.92em; }
+    figure { margin: 0.5rem 0 0; }
+    figure img { width: 100%; height: auto; border: 1px solid var(--line); border-radius: 10px; display: block; }
+    figcaption { font-size: 0.85rem; color: var(--muted); margin-top: 0.4rem; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.92rem; margin-top: 0.3rem; }
+    th, td { text-align: left; padding: 0.45rem 0.6rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { background: var(--paper); font-weight: 700; }
+    .result { margin: 0.3rem 0 0; }
+    footer { text-align: center; color: var(--muted); font-size: 0.85rem; padding: 0 1rem 2rem; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Campus Customs: App Check</h1>
+    <p>HW4 Problem 11 · three features tested on the running site (React + Vite on :5173, FastAPI on :8000), with answers checked against <code style="background:#ffffff22;border-color:#ffffff44;color:#fff">data/campus_customs.db</code></p>
+  </header>
+
+  <main>
+    <div class="summary">
+      <strong>How these were tested:</strong> each check was run by a script driving the real site in Google Chrome (Playwright). It typed into the real chat widget and clicked the real filters, then compared what the page showed with a direct query of the SQLite database. All three passed. No bugs were found, so no code was changed for this problem.
+      <ol>
+        <li>Chatbot answers an inventory / price question with real database values</li>
+        <li>Dynamic product cards appear in the chat after a category question</li>
+        <li>Usability improvement from Problem 9: product search &amp; filters on the Products page</li>
+      </ol>
+    </div>
+
+    <!-- ===================== CHECK 1 ===================== -->
+    <section class="check" id="inventory">
+      <h2>1. Chat checks the inventory level of an item <span class="pass">PASS</span></h2>
+
+      <p class="label">Test</p>
+      <p class="test">On the product page for <strong>Champion Reverse Weave Hoodie 1</strong>, I clicked “Ask the assistant about this item” and typed:
+        <span class="q">How much is this hoodie, how many are left in size M, and is XL available?</span></p>
+
+      <p class="label">Screenshot</p>
+      <figure>
+        <img src="app_check_images/inventory.png" alt="Product page for Champion Reverse Weave Hoodie 1 with the chat open. The assistant answers $68.00, 20 left in M, XL out of stock; the page's size picker and availability table show the same values." />
+        <figcaption>The chat answer (right) next to the page's own size picker and “Availability by size” table (center). The chat shows “Viewing: Champion Reverse Weave Hoodie 1”.</figcaption>
+      </figure>
+
+      <p class="label">Agent answer vs. database</p>
+      <table>
+        <tr><th>Fact</th><th>Agent said</th><th>Database</th><th></th></tr>
+        <tr><td>Price</td><td>$68.00</td><td><code>catalogue.price</code> = 68.0</td><td>✅</td></tr>
+        <tr><td>Size M</td><td>20 left</td><td><code>inventory</code> M = 20</td><td>✅</td></tr>
+        <tr><td>Size XL</td><td>out of stock</td><td><code>inventory</code> XL = 0</td><td>✅</td></tr>
+        <tr><td>Sizes available</td><td>S, M, L, XXL</td><td>S 25 · M 20 · L 20 · XXL 15 (XS 0, XL 0)</td><td>✅</td></tr>
+      </table>
+
+      <p class="label">What this proves</p>
+      <p class="result">The agent uses its database tools (<code>get_product_details</code>, <code>get_inventory</code>) and the current-page context to answer with the <strong>real</strong> price and per-size stock. It correctly calls a 0-quantity size out of stock and doesn't guess.</p>
+    </section>
+
+    <!-- ===================== CHECK 2 ===================== -->
+    <section class="check" id="cards">
+      <h2>2. Dynamic product cards after a category question <span class="pass">PASS</span></h2>
+
+      <p class="label">Test</p>
+      <p class="test">On the Home page, I opened the chat and asked <span class="q">What hoodies do you have?</span></p>
+
+      <p class="label">Screenshots</p>
+      <figure>
+        <img src="app_check_images/product_cards.png" alt="Chat panel showing the question 'What hoodies do you have?', the assistant's short reply, and the first product cards." />
+        <figcaption>The question, the assistant's reply (“We carry 27 hoodie options…”, plus one narrowing question), and the first cards.</figcaption>
+      </figure>
+      <figure style="margin-top:1rem">
+        <img src="app_check_images/product_cards_more.png" alt="The same chat scrolled down, showing all four hoodie product cards with image, name, price, colors and in-stock sizes." />
+        <figcaption>Scrolled down: all 4 cards. Each has a photo, name, price, colors and in-stock sizes, and links to that product's page.</figcaption>
+      </figure>
+
+      <p class="label">Cards vs. database</p>
+      <table>
+        <tr><th>Card (links to)</th><th>Price on card</th><th>Database</th><th></th></tr>
+        <tr><td>Basic Hoodie Big Yale (<code>/products/basic-hoodie-big-yale</code>)</td><td>$68.00</td><td>68.0 · pullover hoodie</td><td>✅</td></tr>
+        <tr><td>Brooks Brothers Double Knit Full Zip Hoodie Yale</td><td>$88.00</td><td>88.0 · full-zip hooded sweatshirt</td><td>✅</td></tr>
+        <tr><td>Champion Full Zip Hood</td><td>$88.00</td><td>88.0 · full-zip hooded sweatshirt</td><td>✅</td></tr>
+        <tr><td>District Vit Hoodie Vintage Bulldog</td><td>$68.00</td><td>68.0 · pullover hoodie</td><td>✅</td></tr>
+      </table>
+
+      <p class="label">What this proves</p>
+      <p class="result">The agent returns structured <code>product_ids</code>. The backend reads every card field from the database, and the React chat renders the matches as clickable product cards. The total of 27 hoodies matches the catalogue, and all four cards are real hoodies with correct prices.</p>
+    </section>
+
+    <!-- ===================== CHECK 3 ===================== -->
+    <section class="check" id="usability">
+      <h2>3. Usability feature (Problem 9): product search &amp; filters <span class="pass">PASS</span></h2>
+
+      <p class="label">Test</p>
+      <p class="test">On the Products page, I picked the <strong>Hoodies</strong> category, set <strong>Available in size = XL</strong> and <strong>Max price = Under $60</strong>.</p>
+
+      <p class="label">Screenshot</p>
+      <figure>
+        <img src="app_check_images/usability_filters.png" alt="Products page filtered to Hoodies, size XL, under $60, showing '1 of 102 items': Yale Sports Hoodie Tennis, $45.00." />
+        <figcaption>Result: “1 of 102 items”, Yale Sports Hoodie Tennis at $45.00. The URL became <code>/products?category=Hoodies&amp;size=XL&amp;max=60</code>, so the filters survive Back, refresh and shared links.</figcaption>
+      </figure>
+
+      <p class="label">Filter result vs. database</p>
+      <table>
+        <tr><th>Query</th><th>Page shows</th><th>Database</th><th></th></tr>
+        <tr><td>Hoodies with XL quantity &gt; 0 and price ≤ $60</td><td>1 item: Yale Sports Hoodie Tennis ($45.00)</td><td>exactly 1 match: Yale Sports Hoodie Tennis</td><td>✅</td></tr>
+      </table>
+
+      <p class="label">What this proves</p>
+      <p class="result">The Problem 9 filters work on real catalogue data. The size filter uses real per-size stock from the <code>inventory</code> table, so a shopper sees only hoodies they can actually buy in XL within budget, without opening each product page.</p>
+    </section>
+  </main>
+
+  <footer>Campus Customs · MGT 409 HW4 · screenshots in <code>output/app_check_images/</code></footer>
+</body>
+</html>

@@ -1,0 +1,55 @@
+# ---- secrets ----
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ---- local data pack (provided by the course; never committed) ----
+data/campus_customs.db
+data/products/
+data/*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ---- frontend / Node ----
+node_modules/
+frontend/dist/
+dist/
+dist-ssr/
+*.tsbuildinfo
+.vite/
+*.local
+
+# ---- audit trail temp/backup files (audit_trail.json itself IS committed) ----
+output/audit_trail.json.tmp
+output/audit_trail.corrupt-*.json
+
+# ---- logs ----
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ---- editor / OS / tool files ----
+.vscode/
+.idea/
+.claude/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+desktop.ini

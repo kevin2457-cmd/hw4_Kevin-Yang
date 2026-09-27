@@ -1,0 +1,2 @@
+# Same dependencies as hw4/requirements.txt (so installing from either folder works).
+-r ../requirements.txt

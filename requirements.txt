@@ -1,0 +1,7 @@
+# Backend (FastAPI + PydanticAI) dependencies. Install from the hw4 folder:
+#   pip install -r requirements.txt
+# Versions are the minimums this project was tested with.
+fastapi>=0.115            # web API (backend/main.py)
+uvicorn[standard]>=0.30   # ASGI server: uvicorn main:app
+pydantic-ai-slim[openai]>=2.43   # agent framework + OpenAI client (used via Portkey)
+python-dotenv>=1.0        # loads hw4/.env
